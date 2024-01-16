@@ -24,11 +24,12 @@ class Planet(db.Model, SerializerMixin):
     name = db.Column(db.String)
     distance_from_earth = db.Column(db.Integer)
     nearest_star = db.Column(db.String)
-
+    missions = db.relationship("Mission", backref="planet")
     # Add relationship
+    scientist = association_proxy("missions","scientist")
     # missions
     # Add serialization rules
-
+    serialize_rules = ("-missions.planet",)
 
 class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
@@ -39,6 +40,7 @@ class Scientist(db.Model, SerializerMixin):
 
     # Add relationship
     missions = db.relationship("Mission", back_populates="scientist")
+    planets = association_proxy("missions","planet")
     # Add serialization rules
     serialize_rules = ("-missions.scientist",)
     # Add validation
@@ -59,7 +61,7 @@ class Mission(db.Model, SerializerMixin):
     planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'), nullable = False)
     scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'), nullable = False)
     # Add relationships
-    planet = db.relationship("Planet", backref="missions")
+    
     scientist = db.relationship("Scientist", back_populates = "missions")
     # Add serialization rules
     serialize_rules = ('-planet.missions','-scientist.missions')

@@ -77,7 +77,7 @@ def planetsAll():
         all_planet = Planet.query.all()
         all_planet_dict = []
         for planet in all_planet:
-            planet.serialize_rules = ('-missions',)
+            # planet.serialize_rules = ('-missions',)
             all_planet_dict.append(planet.to_dict())
         return make_response(all_planet_dict,200)
     
