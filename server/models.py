@@ -26,35 +26,69 @@ class Planet(db.Model, SerializerMixin):
     nearest_star = db.Column(db.String)
 
     # Add relationship
-
+    missions = db.relationship('Mission', back_populates='planet', cascade="all, delete-orphan")
     # Add serialization rules
+    serialize_rules = ('-missions.planet',)
 
 
 class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    field_of_study = db.Column(db.String)
+    name = db.Column(db.String, nullable = False)
+    field_of_study = db.Column(db.String, nullable = False)
 
     # Add relationship
+    missions = db.relationship('Mission',back_populates='scientist',cascade="all, delete-orphan")
 
     # Add serialization rules
-
+    serialize_rules = ('-missions,scientist',)
     # Add validation
+    @validates('name')
+    def validate_name(self,key,value):
+        if value:
+            return value
+        else:
+            raise ValueError("Not valid name")
+    
+    @validates('field_of_study')
+    def validate_field_of_study(self,key,value):
+        if value:
+            return value
+        else:
+            raise ValueError("Not valid field of study")
 
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable = False)
 
     # Add relationships
-
+    scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'), nullable = False)
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'), nullable = False)
+    scientist = db.relationship('Scientist', back_populates='missions')
+    planet = db.relationship('Planet', back_populates='missions')
     # Add serialization rules
-
+    serialize_rules = ('-scientist.missions', '-planet.missions')
     # Add validation
-
+    @validates('name')
+    def validate_name(self,key,value):
+        if value:
+            return value
+        else:
+            raise ValueError("Not valid name")
+    
+    @validates('scientist_id','planet_id')
+    def validate_foreign_ids(self,key,value):
+        if key=="scientist_id":
+            db_findings = Scientist.query.filter(Scientist.id==value).first()
+        else:
+            db_findings = Planet.query.filter(Planet.id==value).first()
+        if db_findings:
+            return value
+        else:
+            raise ValueError(f"Not valid {key}")
 
 # add any models you may need.
